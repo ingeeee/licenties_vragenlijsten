@@ -21,14 +21,14 @@ LEVERANCIERS = [
 VRAGENLIJSTEN = [
     ("WOMAC", "Mapi Research Trust (ePROVIDE)", "Orthopedie", "An Peeters",
      "2024-01-01", "2026-12-31", 250.0, 900.0, "actief"),
-    ("Oxford Knee Score", "Oxford University Innovation", "Orthopedie", "An Peeters",
-     "2025-03-01", "2028-02-28", 0.0, 450.0, "actief"),
+    ("Oxford Knee Score", "Oxford University Innovation", "Orthopedie",
+     "An Peeters", "2025-03-01", "2028-02-28", 0.0, 450.0, "actief"),
     ("Oxford Hip Score", "Oxford University Innovation", "Orthopedie", None,
      None, None, None, None, "aanvraag lopende"),
     ("Rugpijn-vragenlijst", "PROM Solutions BV", "Fysiotherapie", "Tom Claes",
      "2023-06-01", "2025-05-31", 500.0, 1200.0, "opgezegd"),
-    ("Hartfalen-vragenlijst", "Mapi Research Trust (ePROVIDE)", "Cardiologie", "Sara De Smet",
-     None, None, None, None, "aanvraag lopende"),
+    ("Hartfalen-vragenlijst", "Mapi Research Trust (ePROVIDE)", "Cardiologie",
+     "Sara De Smet", None, None, None, None, "aanvraag lopende"),
 ]
 
 
