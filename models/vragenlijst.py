@@ -167,10 +167,11 @@ class Vragenlijst:
 
     def __str__(self):
         leverancier = self.__leverancier_naam or f"leverancier {self.__leverancier_id}"
+        contactpersoon = self.__contactpersoon or "geen contactpersoon"
         periode = (f"{datum_als_tekst(self.__startdatum)} tot "
                    f"{datum_als_tekst(self.__einddatum)}")
         return (f"[{self.__id}] {self.__naam} ({leverancier}) - {self.__afdeling} - "
-                f"{self.__status} - {periode}")
+                f"{contactpersoon} - {self.__status} - {periode}")
 
 
 if __name__ == "__main__":

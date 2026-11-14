@@ -49,6 +49,9 @@ def zoek_op_afdeling(afdeling):
     """Geeft de vragenlijsten van een afdeling terug (deel van de naam volstaat)."""
     return zoek_vragenlijsten(" WHERE v.afdeling LIKE ?", (f"%{afdeling}%",))
 
+def zoek_op_contactpersoon(contactpersoon):
+    """Geeft de vragenlijsten van een contactpersoon terug (deel van de naam volstaat)."""
+    return zoek_vragenlijsten(" WHERE v.contactpersoon LIKE ?", (f"%{contactpersoon}%",))
 
 def zoek_op_leverancier(leverancier_id):
     """Geeft de vragenlijsten van een leverancier terug."""
@@ -81,6 +84,10 @@ if __name__ == "__main__":
 
     print("\n--- Afdeling 'ortho' ---")
     for vragenlijst in zoek_op_afdeling("ortho"):
+        print(vragenlijst)
+
+    print("\n--- Contactpersoon 'Jansen' ---")
+    for vragenlijst in zoek_op_contactpersoon("Jansen"):
         print(vragenlijst)
 
     print("\n--- Leverancier 2 ---")

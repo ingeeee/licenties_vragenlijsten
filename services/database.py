@@ -1,3 +1,5 @@
+"""Aanmaken van de database en de tabellen."""
+
 import os
 import sqlite3
 
