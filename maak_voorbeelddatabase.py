@@ -2,6 +2,8 @@
 
 Eenmalig uitvoeren vanuit de projectmap:  python maak_voorbeelddatabase.py
 """
+
+
 import sqlite3
 
 from config import config
