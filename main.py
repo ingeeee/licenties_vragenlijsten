@@ -1,4 +1,4 @@
-from config import config
+from services.database import maak_tabellen
 
-print("Database:", config.DB_PATH)
-print("Rapporten:", config.RAPPORT_MAP)
+maak_tabellen()
+print("Database is klaar.")

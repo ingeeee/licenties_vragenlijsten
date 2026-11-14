@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Database (Een voorbeelddatabase wordt apart aangeleverd)
+*.db
+
+# Gegenereerde rapporten
+rapporten/
