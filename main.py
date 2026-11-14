@@ -1,8 +1,10 @@
 """Startpunt van de applicatie: een menu in de terminal."""
 
+from models.leverancier import Leverancier
 from models.vragenlijst import Vragenlijst
 from services.database import maak_tabellen
-from services.leveranciers import alle_leveranciers
+from services.leveranciers import (alle_leveranciers, leverancier_bestaat,
+                                   voeg_leverancier_toe)
 from services.vragenlijsten import (alle_vragenlijsten, vervallend_binnen,
                                     zoek_op_afdeling, zoek_op_contactpersoon, zoek_op_leverancier,
                                     zoek_op_status)
@@ -13,6 +15,7 @@ MENU = """
 2. Alle vragenlijsten tonen
 3. Vragenlijsten zoeken (afdeling / leverancier / contactpersoon / status)
 4. Licenties die binnenkort vervallen
+5. Nieuwe leverancier toevoegen
 0. Afsluiten"""
 
 
@@ -98,6 +101,32 @@ def menu_vervallend():
     for vragenlijst in vervallend:
         print(vragenlijst, f"(nog {vragenlijst.dagen_tot_einddatum()} dagen)")
 
+def menu_nieuwe_leverancier():
+    """Menu-optie 5: een nieuwe leverancier toevoegen."""
+    print("\n--- Nieuwe leverancier ---")
+
+    # Naam (+ controle)
+    naam = input("Naam (leeg laten om te annuleren): ").strip()
+    if not naam:
+        print("Toevoegen geannuleerd.")
+        return
+    if leverancier_bestaat(naam):
+        print(f"Er bestaat al een leverancier met de naam '{naam}'.")
+        return
+    leverancier = Leverancier(naam)
+
+    # E-mailadres (opnieuw vragen zolang het ongeldig is)
+    while True:
+        email = input("E-mailadres (leeg laten als je het niet kent): ")
+        try:
+            leverancier.set_email(email)
+            break
+        except ValueError as fout:
+            print(fout)
+
+    nieuw_id = voeg_leverancier_toe(leverancier)
+    print(f"Leverancier '{leverancier.get_naam()}' toegevoegd met id {nieuw_id}.")
+
 
 # Het hoofdprogramma
 
@@ -117,6 +146,8 @@ def main():
             menu_zoeken()
         elif keuze == "4":
             menu_vervallend()
+        elif keuze == "5":
+            menu_nieuwe_leverancier()
         elif keuze == "0":
             print("Tot ziens!")
             break
