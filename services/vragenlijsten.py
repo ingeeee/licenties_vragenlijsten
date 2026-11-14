@@ -3,7 +3,7 @@
 import sqlite3
 
 from config import config
-from models.vragenlijst import Vragenlijst
+from models.vragenlijst import Vragenlijst, datum_voor_database
 
 # Basisquery: alle kolommen van vragenlijsten + de naam van de leverancier.
 # Wordt hergebruikt door de verschillende opzoekfuncties.
@@ -75,6 +75,32 @@ def vervallend_binnen(aantal_dagen):
     # Sorteer op einddatum: wat het eerst vervalt, staat bovenaan
     vervallend.sort(key=lambda item: item.get_einddatum())
     return vervallend
+
+def voeg_vragenlijst_toe(nieuwe_vragenlijst):
+    """Slaat een nieuwe vragenlijst op in de database en geeft het nieuwe id terug."""
+    with sqlite3.connect(config.DB_PATH) as db:
+        cursor = db.execute(
+            """
+            INSERT INTO vragenlijsten
+            (naam, leverancier_id, afdeling, contactpersoon,
+             startdatum, einddatum, opstartkost, jaarlijkse_kost, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                nieuwe_vragenlijst.get_naam(),
+                nieuwe_vragenlijst.get_leverancier_id(),
+                nieuwe_vragenlijst.get_afdeling(),
+                nieuwe_vragenlijst.get_contactpersoon(),
+                datum_voor_database(nieuwe_vragenlijst.get_startdatum()),
+                datum_voor_database(nieuwe_vragenlijst.get_einddatum()),
+                nieuwe_vragenlijst.get_opstartkost(),
+                nieuwe_vragenlijst.get_jaarlijkse_kost(),
+                nieuwe_vragenlijst.get_status(),
+            ),
+        )
+        nieuw_id = cursor.lastrowid
+    db.close()
+    return nieuw_id
 
 
 if __name__ == "__main__":

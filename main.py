@@ -1,11 +1,11 @@
 """Startpunt van de applicatie: een menu in de terminal."""
 
 from models.leverancier import Leverancier
-from models.vragenlijst import Vragenlijst
+from models.vragenlijst import Vragenlijst, controleer_datum, controleer_kost
 from services.database import maak_tabellen
 from services.leveranciers import (alle_leveranciers, leverancier_bestaat,
                                    voeg_leverancier_toe)
-from services.vragenlijsten import (alle_vragenlijsten, vervallend_binnen,
+from services.vragenlijsten import (alle_vragenlijsten, vervallend_binnen, voeg_vragenlijst_toe,
                                     zoek_op_afdeling, zoek_op_contactpersoon, zoek_op_leverancier,
                                     zoek_op_status)
 
@@ -16,6 +16,7 @@ MENU = """
 3. Vragenlijsten zoeken (afdeling / leverancier / contactpersoon / status)
 4. Licenties die binnenkort vervallen
 5. Nieuwe leverancier toevoegen
+6. Nieuwe vragenlijst (of aanvraag) toevoegen
 0. Afsluiten"""
 
 
@@ -38,6 +39,48 @@ def vraag_getal(vraag):
         print("Gelieve een geheel getal in te geven.")
 
 
+def vraag_tot_geldig(vraag, controle):
+    """Blijft vragen tot controle(antwoord) geen ValueError meer geeft.
+
+    Geeft het geldige antwoord terug.
+    """
+    while True:
+        antwoord = input(vraag).strip()
+        try:
+            controle(antwoord)
+            return antwoord
+        except ValueError as fout:
+            print(fout)
+
+
+def kies_leverancier():
+    """Toont alle leveranciers en vraagt de gebruiker er een te kiezen.
+
+    Geeft het id van de gekozen leverancier terug.
+    """
+    leveranciers = alle_leveranciers()
+    toon_lijst(leveranciers)
+    geldige_ids = []
+    for leverancier in leveranciers:
+        geldige_ids.append(leverancier.get_id())
+    while True:
+        leverancier_id = vraag_getal("Id van de leverancier: ")
+        if leverancier_id in geldige_ids:
+            return leverancier_id
+        print("Er is geen leverancier met dit id.")
+
+
+def kies_status():
+    """Toont de mogelijke statussen en laat de gebruiker er een kiezen."""
+    for nummer, status in enumerate(Vragenlijst.STATUSSEN, start=1):
+        print(f"  {nummer}. {status}")
+    while True:
+        nummer = vraag_getal("Kies een status: ")
+        if 1 <= nummer <= len(Vragenlijst.STATUSSEN):
+            return Vragenlijst.STATUSSEN[nummer - 1]
+        print("Ongeldige keuze.")
+
+
 # De menu-opties
 
 def menu_leveranciers():
@@ -53,7 +96,7 @@ def menu_vragenlijsten():
 
 
 def menu_zoeken():
-    """Menu-optie 3: vragenlijsten zoeken op afdeling, contactpersoon, leverancier of status."""
+    """Menu-optie 3: vragenlijsten zoeken op afdeling, leverancier, contactpersoon of status."""
     print("\nZoeken op:")
     print("  a. afdeling")
     print("  b. leverancier")
@@ -67,8 +110,7 @@ def menu_zoeken():
         toon_lijst(zoek_op_afdeling(afdeling))
 
     elif keuze == "b":
-        toon_lijst(alle_leveranciers())
-        leverancier_id = vraag_getal("Id van de leverancier: ")
+        leverancier_id = kies_leverancier()
         print()
         toon_lijst(zoek_op_leverancier(leverancier_id))
 
@@ -78,14 +120,9 @@ def menu_zoeken():
         toon_lijst(zoek_op_contactpersoon(contactpersoon))
 
     elif keuze == "d":
-        for nummer, status in enumerate(Vragenlijst.STATUSSEN, start=1):
-            print(f"  {nummer}. {status}")
-        nummer = vraag_getal("Kies een status: ")
-        if 1 <= nummer <= len(Vragenlijst.STATUSSEN):
-            print()
-            toon_lijst(zoek_op_status(Vragenlijst.STATUSSEN[nummer - 1]))
-        else:
-            print("Ongeldige keuze.")
+        status = kies_status()
+        print()
+        toon_lijst(zoek_op_status(status))
 
     else:
         print("Ongeldige keuze.")
@@ -100,6 +137,7 @@ def menu_vervallend():
         print("Geen resultaten gevonden.")
     for vragenlijst in vervallend:
         print(vragenlijst, f"(nog {vragenlijst.dagen_tot_einddatum()} dagen)")
+
 
 def menu_nieuwe_leverancier():
     """Menu-optie 5: een nieuwe leverancier toevoegen."""
@@ -128,6 +166,44 @@ def menu_nieuwe_leverancier():
     print(f"Leverancier '{leverancier.get_naam()}' toegevoegd met id {nieuw_id}.")
 
 
+def menu_nieuwe_vragenlijst():
+    """Menu-optie 6: een nieuwe vragenlijst (of aanvraag) toevoegen."""
+    print("\n--- Nieuwe vragenlijst ---")
+
+    naam = input("Naam van de vragenlijst (leeg laten om te annuleren): ").strip()
+    if not naam:
+        print("Toevoegen geannuleerd.")
+        return
+
+    print("\nLeverancier:")
+    leverancier_id = kies_leverancier()
+
+    while True:
+        try:
+            vragenlijst = Vragenlijst(naam, leverancier_id, input("Afdeling: "))
+            break
+        except ValueError as fout:
+            print(fout)
+
+    vragenlijst.set_contactpersoon(input("Contactpersoon (mag leeg): "))
+
+    print("\nStatus:")
+    vragenlijst.set_status(kies_status())
+
+    print("\nDatums in de vorm DD-MM-JJJJ (leeg laten als ze nog niet gekend zijn)")
+    startdatum = vraag_tot_geldig("Startdatum: ", controleer_datum)
+    vraag_tot_geldig("Einddatum: ",
+                     lambda einddatum: vragenlijst.set_periode(startdatum, einddatum))
+
+    print("\nKosten in euro (leeg laten als ze nog niet gekend zijn)")
+    opstartkost = vraag_tot_geldig("Opstartkost: ", controleer_kost)
+    vraag_tot_geldig("Jaarlijkse kost: ",
+                     lambda jaarlijkse_kost: vragenlijst.set_kosten(opstartkost, jaarlijkse_kost))
+
+    nieuw_id = voeg_vragenlijst_toe(vragenlijst)
+    print(f"\nVragenlijst '{vragenlijst.get_naam()}' toegevoegd met id {nieuw_id}.")
+
+
 # Het hoofdprogramma
 
 def main():
@@ -148,6 +224,8 @@ def main():
             menu_vervallend()
         elif keuze == "5":
             menu_nieuwe_leverancier()
+        elif keuze == "6":
+            menu_nieuwe_vragenlijst()
         elif keuze == "0":
             print("Tot ziens!")
             break
