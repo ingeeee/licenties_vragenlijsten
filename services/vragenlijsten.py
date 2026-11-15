@@ -63,6 +63,30 @@ def zoek_op_contactpersoon(contactpersoon):
     return zoek_vragenlijsten(" WHERE v.contactpersoon LIKE ?", (f"%{contactpersoon}%",))
 
 
+def alle_contactpersonen():
+    """Geeft een alfabetische lijst van alle contactpersonen terug."""
+    with sqlite3.connect(config.DB_PATH) as db:
+        rijen = db.execute(
+            """
+            SELECT DISTINCT contactpersoon
+            FROM vragenlijsten
+            WHERE contactpersoon IS NOT NULL
+            ORDER BY contactpersoon
+            """
+        ).fetchall()
+    db.close()
+
+    contactpersonen = []
+    for (contactpersoon,) in rijen:
+        contactpersonen.append(contactpersoon)
+    return contactpersonen
+
+
+def vragenlijsten_van_contactpersoon(contactpersoon):
+    """Geeft de vragenlijsten van een contactpersoon terug."""
+    return zoek_vragenlijsten(" WHERE v.contactpersoon = ?", (contactpersoon,))
+
+
 def zoek_op_leverancier(leverancier_id):
     """Geeft de vragenlijsten van een leverancier terug."""
     return zoek_vragenlijsten(" WHERE v.leverancier_id = ?", (leverancier_id,))
@@ -138,6 +162,21 @@ def wijzig_vragenlijst(gewijzigde_vragenlijst):
             ),
         )
     db.close()
+
+
+def draag_contactpersoon_over(oude_contactpersoon, nieuwe_contactpersoon):
+    """Vervangt een contactpersoon door een andere bij al zijn/haar vragenlijsten.
+
+    Geeft het aantal aangepaste vragenlijsten terug.
+    """
+    with sqlite3.connect(config.DB_PATH) as db:
+        cursor = db.execute(
+            "UPDATE vragenlijsten SET contactpersoon = ? WHERE contactpersoon = ?",
+            (nieuwe_contactpersoon, oude_contactpersoon),
+        )
+        aantal = cursor.rowcount
+    db.close()
+    return aantal
 
 
 if __name__ == "__main__":

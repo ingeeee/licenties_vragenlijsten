@@ -6,9 +6,12 @@ from models.vragenlijst import (Vragenlijst, controleer_datum, controleer_kost,
 from services.database import maak_tabellen
 from services.leveranciers import (alle_leveranciers, leverancier_bestaat,
                                    voeg_leverancier_toe)
-from services.vragenlijsten import (alle_vragenlijsten, vervallend_binnen, voeg_vragenlijst_toe,
-                                    wijzig_vragenlijst, zoek_op_afdeling, zoek_op_contactpersoon,
-                                    zoek_op_id, zoek_op_leverancier, zoek_op_status)
+from services.vragenlijsten import (alle_contactpersonen, alle_vragenlijsten,
+                                    draag_contactpersoon_over, vervallend_binnen,
+                                    voeg_vragenlijst_toe, vragenlijsten_van_contactpersoon,
+                                    wijzig_vragenlijst, zoek_op_afdeling,
+                                    zoek_op_contactpersoon, zoek_op_id,
+                                    zoek_op_leverancier, zoek_op_status)
 
 MENU = """
 === Licenties vragenlijsten ===
@@ -20,6 +23,7 @@ MENU = """
 6. Nieuwe vragenlijst (of aanvraag) toevoegen
 7. Vragenlijst aanpassen
 8. Details van een vragenlijst bekijken
+9. Contactpersoon overdragen (vb. bij vertrek)
 0. Afsluiten"""
 
 
@@ -311,6 +315,53 @@ def menu_details():
     print(vragenlijst.details())
 
 
+def menu_overdragen():
+    """Menu-optie 9: alle vragenlijsten van een contactpersoon overdragen aan iemand anders."""
+    print("\n--- Contactpersoon overdragen ---")
+    contactpersonen = alle_contactpersonen()
+    if not contactpersonen:
+        print("Er zijn nog geen contactpersonen.")
+        return
+
+    # Stap 1: de huidige contactpersoon kiezen uit een genummerde lijst
+    for nummer, contactpersoon in enumerate(contactpersonen, start=1):
+        print(f"  {nummer}. {contactpersoon}")
+    nummer = vraag_getal("Typ het nummer van de contactpersoon die je wil vervangen: ")
+    if not 1 <= nummer <= len(contactpersonen):
+        print("Ongeldige keuze.")
+        return
+    oude = contactpersonen[nummer - 1]
+
+    # Stap 2: tonen wat er zal veranderen
+    print(f"\nVragenlijsten van {oude}:")
+    toon_lijst(vragenlijsten_van_contactpersoon(oude))
+
+        # Stap 3: de nieuwe contactpersoon kiezen (bestaand) of typen (nieuw)
+    print("\nNieuwe contactpersoon:")
+    for nummer, contactpersoon in enumerate(contactpersonen, start=1):
+        print(f"  {nummer}. {contactpersoon}")
+    antwoord = input("Typ het NUMMER van een bestaande contactpersoon of de NAAM van "
+                     "een nieuwe (leeg laten om te annuleren): ").strip()
+    if not antwoord:
+        print("Overdragen geannuleerd.")
+        return
+    if antwoord.isdigit() and 1 <= int(antwoord) <= len(contactpersonen):
+        nieuwe = contactpersonen[int(antwoord) - 1]
+    else:
+        nieuwe = antwoord
+    if nieuwe == oude:
+        print("De nieuwe contactpersoon is dezelfde als de huidige. Er verandert niets.")
+        return
+
+    # Stap 4: bevestigen en uitvoeren
+    bevestiging = input(f"Alles van {oude} overdragen aan {nieuwe}? (j/n): ").strip().lower()
+    if bevestiging != "j":
+        print("Overdragen geannuleerd.")
+        return
+    aantal = draag_contactpersoon_over(oude, nieuwe)
+    print(f"{aantal} vragenlijst(en) overgedragen van {oude} aan {nieuwe}.")
+
+
 # Het hoofdprogramma
 
 def main():
@@ -337,6 +388,8 @@ def main():
             menu_aanpassen()
         elif keuze == "8":
             menu_details()
+        elif keuze == "9":
+            menu_overdragen()
         elif keuze == "0":
             print("Tot ziens!")
             break
