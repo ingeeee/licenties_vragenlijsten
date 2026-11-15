@@ -53,6 +53,9 @@ def menu_zoeken():
         toon_lijst(zoek_op_afdeling(afdeling))
 
     elif keuze == "b":
+        if not alle_leveranciers():
+            print("Er zijn nog geen leveranciers.")
+            return
         leverancier = kies_leverancier()
         print()
         toon_lijst(zoek_op_leverancier(leverancier.get_id()))
@@ -106,6 +109,10 @@ def menu_nieuwe_leverancier():
 def menu_nieuwe_vragenlijst():
     """Menu-optie 7: een nieuwe vragenlijst (of aanvraag) toevoegen."""
     print("\n--- Nieuwe vragenlijst ---")
+
+    if not alle_leveranciers():
+        print("Voeg eerst een leverancier toe (optie 6).")
+        return
 
     naam = input("Naam van de vragenlijst (leeg laten om te annuleren): ").strip()
     if not naam:
@@ -238,10 +245,20 @@ def menu_overdragen():
     if not antwoord:
         print("Overdragen geannuleerd.")
         return
-    if antwoord.isdigit() and 1 <= int(antwoord) <= len(contactpersonen):
+    if antwoord.isdigit():
+        # Een getal is altijd een keuze uit de lijst, nooit een naam van een nieuwe contactpersoon
+        if not 1 <= int(antwoord) <= len(contactpersonen):
+            print("Ongeldig nummer. Overdragen geannuleerd.")
+            return
         nieuwe = contactpersonen[int(antwoord) - 1]
     else:
         nieuwe = antwoord
+        # Bestaat deze naam al (hoofdletters niet meegerekend)?
+        # Gebruik dan de bestaande schrijfwijze.
+        for contactpersoon in contactpersonen:
+            if contactpersoon.lower() == antwoord.lower():
+                nieuwe = contactpersoon
+                break
     if nieuwe == oude:
         print("De nieuwe contactpersoon is dezelfde als de huidige. Er verandert niets.")
         return

@@ -9,8 +9,6 @@ from models.omzetting import (controleer_datum, controleer_kost, datum_als_tekst
 # De klasse volgt de kolommen van de tabel, vandaar veel attributen, parameters en methodes.
 # pylint: disable=too-many-instance-attributes,too-many-arguments
 # pylint: disable=too-many-positional-arguments,too-many-public-methods
-
-
 class Vragenlijst:
     """Een licentie (of aanvraag) voor een vragenlijst bij een leverancier."""
 
