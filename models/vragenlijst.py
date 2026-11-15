@@ -1,68 +1,14 @@
 """Bevat de klasse Vragenlijst."""
 
-from datetime import date, datetime
+from datetime import date
 
-# Formaat waarin de gebruiker datums intypt en te zien krijgt
-DATUMFORMAAT = "%d-%m-%Y"      # DD-MM-JJJJ
-# Formaat waarin datums in de database bewaard worden
-DATABASEFORMAAT = "%Y-%m-%d"   # JJJJ-MM-DD
+from models.omzetting import (controleer_datum, controleer_kost, datum_als_tekst,
+                              datum_voor_database, kost_als_tekst)
 
 
-def controleer_datum(tekst):
-    """Zet een datum in tekst om naar een date-object.
-
-    Aanvaardt DD-MM-JJJJ (zoals de gebruiker ingeeft) en JJJJ-MM-DD (zoals in de database).
-    Geeft None terug als er geen datum is ingevuld.
-    """
-    if not tekst:
-        return None
-    for formaat in (DATUMFORMAAT, DATABASEFORMAAT):
-        try:
-            return datetime.strptime(tekst.strip(), formaat).date()
-        except ValueError:
-            pass  # Als het ene formaat niet lukt, proberen we het andere
-    raise ValueError(f"'{tekst}' is geen geldige datum (gebruik DD-MM-JJJJ).")
-
-
-def datum_als_tekst(datum, leeg="?"):
-    """Geeft een date-object terug als tekst DD-MM-JJJJ (of leeg als er geen datum is)."""
-    return datum.strftime(DATUMFORMAAT) if datum else leeg
-
-
-def datum_voor_database(datum):
-    """Geeft een date-object terug als tekst JJJJ-MM-DD (of None als er geen datum is)."""
-    return datum.strftime(DATABASEFORMAAT) if datum else None
-
-
-def kost_als_tekst(kost, leeg="?"):
-    """Geeft een kost terug als tekst (met 2 decimalen, komma voor decimalen).
-
-    Geeft leeg terug als er geen kost is.
-    """
-    if kost is None:
-        return leeg
-    return f"{kost:.2f}".replace(".", ",")
-
-
-def controleer_kost(kost):
-    """Controleert een kost: leeg (None) of een getal van minstens 0.
-
-    Bij invoer als tekst wordt de Belgische schrijfwijze gebruikt:
-    een komma voor decimalen en geen punt.
-    """
-    if kost is None or kost == "":
-        return None
-    if isinstance(kost, str):
-        if "." in kost:
-            raise ValueError("Gebruik een komma voor decimalen, geen punt.")
-        kost = kost.replace(",", ".")
-    try:
-        bedrag = float(kost)
-    except ValueError as fout:
-        raise ValueError(f"'{kost}' is geen geldig bedrag.") from fout
-    if bedrag < 0:
-        raise ValueError("Een kost kan niet negatief zijn.")
-    return bedrag
+# De klasse volgt de kolommen van de tabel, vandaar veel attributen, parameters en methodes.
+# pylint: disable=too-many-instance-attributes,too-many-arguments
+# pylint: disable=too-many-positional-arguments,too-many-public-methods
 
 
 class Vragenlijst:
@@ -92,56 +38,45 @@ class Vragenlijst:
         """Geeft het id terug (None als nog niet opgeslagen)."""
         return self.__id
 
-
     def get_naam(self):
         """Geeft de naam van de vragenlijst terug."""
         return self.__naam
-
 
     def get_leverancier_id(self):
         """Geeft het id van de leverancier terug."""
         return self.__leverancier_id
 
-
     def get_leverancier_naam(self):
         """Geeft de naam van de leverancier terug (indien gekend)."""
         return self.__leverancier_naam
-
 
     def get_afdeling(self):
         """Geeft de afdeling terug."""
         return self.__afdeling
 
-
     def get_contactpersoon(self):
         """Geeft de contactpersoon terug (None als er geen is)."""
         return self.__contactpersoon
-
 
     def get_startdatum(self):
         """Geeft de startdatum terug als date-object (of None)."""
         return self.__startdatum
 
-
     def get_einddatum(self):
         """Geeft de einddatum terug als date-object (of None)."""
         return self.__einddatum
-
 
     def get_opstartkost(self):
         """Geeft de eenmalige opstartkost terug (of None)."""
         return self.__opstartkost
 
-
     def get_jaarlijkse_kost(self):
         """Geeft de jaarlijkse kost terug (of None)."""
         return self.__jaarlijkse_kost
 
-
     def get_status(self):
         """Geeft de status terug."""
         return self.__status
-
 
     # Setters
 
@@ -151,12 +86,10 @@ class Vragenlijst:
             raise ValueError("De naam van de vragenlijst mag niet leeg zijn.")
         self.__naam = naam.strip()
 
-
     def set_leverancier(self, leverancier_id, leverancier_naam=None):
         """Koppelt de vragenlijst aan een (andere) leverancier."""
         self.__leverancier_id = leverancier_id
         self.__leverancier_naam = leverancier_naam
-
 
     def set_afdeling(self, afdeling):
         """Stelt de afdeling in. De afdeling mag niet leeg zijn."""
@@ -164,11 +97,9 @@ class Vragenlijst:
             raise ValueError("De afdeling mag niet leeg zijn.")
         self.__afdeling = afdeling.strip()
 
-
     def set_contactpersoon(self, contactpersoon):
         """Stelt de contactpersoon in (mag leeg zijn)."""
         self.__contactpersoon = contactpersoon.strip() if contactpersoon else None
-
 
     def set_periode(self, startdatum, einddatum):
         """Stelt start- en einddatum in.
@@ -182,12 +113,10 @@ class Vragenlijst:
         self.__startdatum = startdatum
         self.__einddatum = einddatum
 
-
     def set_kosten(self, opstartkost, jaarlijkse_kost):
         """Stelt de opstartkost en de jaarlijkse kost in (mogen leeg zijn)."""
         self.__opstartkost = controleer_kost(opstartkost)
         self.__jaarlijkse_kost = controleer_kost(jaarlijkse_kost)
-
 
     def set_status(self, status):
         """Stelt de status in. Enkel de waarden in STATUSSEN zijn toegelaten."""
@@ -195,7 +124,6 @@ class Vragenlijst:
             raise ValueError(f"Ongeldige status '{status}'. "
                              f"Kies uit: {', '.join(Vragenlijst.STATUSSEN)}.")
         self.__status = status
-
 
     # Extra methoden
 
@@ -208,13 +136,11 @@ class Vragenlijst:
             return None
         return (self.__einddatum - date.today()).days
 
-
     def vervalt_binnen(self, aantal_dagen):
         """Geeft True als de licentie actief is en binnen aantal_dagen vervalt."""
         dagen = self.dagen_tot_einddatum()
         return (self.__status == "actief" and dagen is not None
                 and 0 <= dagen <= aantal_dagen)
-
 
     def details(self):
         """Geeft alle gegevens van de vragenlijst terug als tekst over meerdere regels."""
@@ -229,7 +155,6 @@ class Vragenlijst:
                 f"  Einddatum:       {datum_als_tekst(self.__einddatum)}\n"
                 f"  Opstartkost:     {kost_als_tekst(self.__opstartkost)} euro\n"
                 f"  Jaarlijkse kost: {kost_als_tekst(self.__jaarlijkse_kost)} euro")
-
 
     def __str__(self):
         leverancier = self.__leverancier_naam or f"leverancier {self.__leverancier_id}"
@@ -249,7 +174,7 @@ if __name__ == "__main__":
     print(hip)
     print("Dagen tot einddatum WOMAC:", womac.dagen_tot_einddatum())
     print("Vervalt WOMAC binnen 60 dagen?", womac.vervalt_binnen(60))
-    print("Einddatum WOMAC voor de database:", womac.get_einddatum().strftime(DATABASEFORMAAT))
+    print("Einddatum WOMAC voor de database:", datum_voor_database(womac.get_einddatum()))
     print(womac.details())
 
     # De status wijzigen via de setter

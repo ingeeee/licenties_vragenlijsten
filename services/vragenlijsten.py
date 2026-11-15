@@ -3,7 +3,8 @@
 import sqlite3
 
 from config import config
-from models.vragenlijst import Vragenlijst, datum_voor_database
+from models.omzetting import datum_voor_database
+from models.vragenlijst import Vragenlijst
 
 # Basisquery: alle kolommen van vragenlijsten + de naam van de leverancier.
 # Wordt hergebruikt door de verschillende opzoekfuncties.

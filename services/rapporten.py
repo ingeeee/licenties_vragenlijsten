@@ -5,7 +5,7 @@ import os
 from datetime import date
 
 from config import config
-from models.vragenlijst import datum_als_tekst, kost_als_tekst
+from models.omzetting import datum_als_tekst, kost_als_tekst
 from services.vragenlijsten import alle_vragenlijsten, kosten_per_afdeling
 
 # Instellingen zodat het bestand netjes opent in een Belgische Excel

@@ -9,7 +9,7 @@ class Leverancier:
         self.set_naam(naam)
         self.set_email(email)
 
-    # --- getters ---------------------------------------------------------
+    # Getters
 
     def get_id(self):
         """Geeft het id van de leverancier terug (None als nog niet opgeslagen)."""
@@ -23,7 +23,7 @@ class Leverancier:
         """Geeft het e-mailadres van de leverancier terug (None als er geen is)."""
         return self.__email
 
-    # --- setters met controles -------------------------------------------
+    # Setters
 
     def set_naam(self, naam):
         """Stelt de naam van de leverancier in. De naam mag niet leeg zijn."""

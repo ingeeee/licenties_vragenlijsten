@@ -1,8 +1,9 @@
 """Startpunt van de applicatie: een menu in de terminal."""
 
 from models.leverancier import Leverancier
-from models.vragenlijst import (Vragenlijst, controleer_datum, controleer_kost,
-                                datum_als_tekst, kost_als_tekst)
+from models.omzetting import (controleer_datum, controleer_kost, datum_als_tekst,
+                              kost_als_tekst)
+from models.vragenlijst import Vragenlijst
 from services.database import maak_tabellen
 from services.leveranciers import (alle_leveranciers, leverancier_bestaat,
                                    voeg_leverancier_toe)
