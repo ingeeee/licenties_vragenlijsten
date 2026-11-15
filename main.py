@@ -16,17 +16,23 @@ from services.vragenlijsten import (alle_contactpersonen, alle_vragenlijsten,
 
 MENU = """
 === Licenties vragenlijsten ===
-1. Alle leveranciers tonen
-2. Alle vragenlijsten tonen
-3. Vragenlijsten zoeken (afdeling / leverancier / contactpersoon / status)
-4. Licenties die binnenkort vervallen
-5. Nieuwe leverancier toevoegen
-6. Nieuwe vragenlijst (of aanvraag) toevoegen
-7. Vragenlijst aanpassen
-8. Details van een vragenlijst bekijken
-9. Contactpersoon overdragen (vb. bij vertrek)
-10. Rapport maken (csv-bestand)
-0. Afsluiten"""
+Bekijken
+  1. Alle leveranciers tonen
+  2. Alle vragenlijsten tonen
+  3. Details van een vragenlijst bekijken (ook de kosten)
+  4. Vragenlijsten zoeken (afdeling / leverancier / contactpersoon / status)
+  5. Licenties die binnenkort vervallen
+Toevoegen
+  6. Nieuwe leverancier toevoegen
+  7. Nieuwe vragenlijst (of aanvraag) toevoegen
+Wijzigen
+  8. Vragenlijst aanpassen
+  9. Contactpersoon overdragen (bv. bij vertrek van een collega)
+Rapport
+ 10. Rapport maken (csv)
+
+0. Afsluiten
+"""
 
 
 # Hulpfuncties voor het menu
@@ -89,7 +95,7 @@ def kies_leverancier():
     leveranciers = alle_leveranciers()
     toon_lijst(leveranciers)
     while True:
-        leverancier_id = vraag_getal("Id van de leverancier: ")
+        leverancier_id = vraag_getal("Typ het id (het nummer tussen [ ]) van de leverancier: ")
         for leverancier in leveranciers:
             if leverancier.get_id() == leverancier_id:
                 return leverancier
@@ -121,8 +127,21 @@ def menu_vragenlijsten():
     toon_lijst(alle_vragenlijsten())
 
 
+def menu_details():
+    """Menu-optie 3: alle gegevens van één vragenlijst bekijken, ook de kosten."""
+    print("\n--- Details van een vragenlijst ---")
+    toon_lijst(alle_vragenlijsten())
+    vragenlijst = zoek_op_id(
+        vraag_getal("\nTyp het id (het nummer tussen [ ]) van de vragenlijst: "))
+    if vragenlijst is None:
+        print("Er is geen vragenlijst met dit id.")
+        return
+    print()
+    print(vragenlijst.details())
+
+
 def menu_zoeken():
-    """Menu-optie 3: vragenlijsten zoeken op afdeling, leverancier, contactpersoon of status."""
+    """Menu-optie 4: vragenlijsten zoeken op afdeling, leverancier, contactpersoon of status."""
     print("\nZoeken op:")
     print("  a. afdeling")
     print("  b. leverancier")
@@ -155,7 +174,7 @@ def menu_zoeken():
 
 
 def menu_vervallend():
-    """Menu-optie 4: actieve licenties die binnen X dagen vervallen."""
+    """Menu-optie 5: actieve licenties die binnen X dagen vervallen."""
     dagen = vraag_getal("Binnen hoeveel dagen? ")
     print(f"\n--- Actieve licenties die binnen {dagen} dagen vervallen ---")
     vervallend = vervallend_binnen(dagen)
@@ -166,7 +185,7 @@ def menu_vervallend():
 
 
 def menu_nieuwe_leverancier():
-    """Menu-optie 5: een nieuwe leverancier toevoegen."""
+    """Menu-optie 6: een nieuwe leverancier toevoegen."""
     print("\n--- Nieuwe leverancier ---")
 
     # Naam (+ controle)
@@ -193,7 +212,7 @@ def menu_nieuwe_leverancier():
 
 
 def menu_nieuwe_vragenlijst():
-    """Menu-optie 6: een nieuwe vragenlijst (of aanvraag) toevoegen."""
+    """Menu-optie 7: een nieuwe vragenlijst (of aanvraag) toevoegen."""
     print("\n--- Nieuwe vragenlijst ---")
 
     naam = input("Naam van de vragenlijst (leeg laten om te annuleren): ").strip()
@@ -245,10 +264,11 @@ Wat wil je aanpassen?
 
 
 def menu_aanpassen():
-    """Menu-optie 7: een bestaande vragenlijst aanpassen."""
+    """Menu-optie 8: een bestaande vragenlijst aanpassen."""
     print("\n--- Vragenlijst aanpassen ---")
     toon_lijst(alle_vragenlijsten())
-    vragenlijst = zoek_op_id(vraag_getal("\nId van de vragenlijst: "))
+    vragenlijst = zoek_op_id(
+        vraag_getal("\nTyp het id (het nummer tussen [ ]) van de vragenlijst: "))
     if vragenlijst is None:
         print("Er is geen vragenlijst met dit id.")
         return
@@ -305,18 +325,6 @@ def menu_aanpassen():
             print("Ongeldige keuze.")
 
 
-def menu_details():
-    """Alle gegevens van één vragenlijst bekijken, ook de kosten."""
-    print("\n--- Details van een vragenlijst ---")
-    toon_lijst(alle_vragenlijsten())
-    vragenlijst = zoek_op_id(vraag_getal("\nId van de vragenlijst: "))
-    if vragenlijst is None:
-        print("Er is geen vragenlijst met dit id.")
-        return
-    print()
-    print(vragenlijst.details())
-
-
 def menu_overdragen():
     """Menu-optie 9: alle vragenlijsten van een contactpersoon overdragen aan iemand anders."""
     print("\n--- Contactpersoon overdragen ---")
@@ -338,7 +346,7 @@ def menu_overdragen():
     print(f"\nVragenlijsten van {oude}:")
     toon_lijst(vragenlijsten_van_contactpersoon(oude))
 
-        # Stap 3: de nieuwe contactpersoon kiezen (bestaand) of typen (nieuw)
+    # Stap 3: de nieuwe contactpersoon kiezen (bestaand) of typen (nieuw)
     print("\nNieuwe contactpersoon:")
     for nummer, contactpersoon in enumerate(contactpersonen, start=1):
         print(f"  {nummer}. {contactpersoon}")
@@ -383,23 +391,24 @@ def menu_rapport():
 
 # Het hoofdprogramma
 
-# welke functie hoort bij welke keuze in het hoofdmenu
+# Welke functie hoort bij welke keuze in het hoofdmenu
 MENU_ACTIES = {
     "1": menu_leveranciers,
     "2": menu_vragenlijsten,
-    "3": menu_zoeken,
-    "4": menu_vervallend,
-    "5": menu_nieuwe_leverancier,
-    "6": menu_nieuwe_vragenlijst,
-    "7": menu_aanpassen,
-    "8": menu_details,
+    "3": menu_details,
+    "4": menu_zoeken,
+    "5": menu_vervallend,
+    "6": menu_nieuwe_leverancier,
+    "7": menu_nieuwe_vragenlijst,
+    "8": menu_aanpassen,
     "9": menu_overdragen,
     "10": menu_rapport,
 }
 
+
 def main():
     """Toont het menu en voert de gekozen optie uit, tot de gebruiker afsluit."""
-    maak_tabellen() 
+    maak_tabellen()
 
     while True:
         print(MENU)
