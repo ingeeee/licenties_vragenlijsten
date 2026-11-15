@@ -19,6 +19,7 @@ MENU = """
 5. Nieuwe leverancier toevoegen
 6. Nieuwe vragenlijst (of aanvraag) toevoegen
 7. Vragenlijst aanpassen
+8. Details van een vragenlijst bekijken
 0. Afsluiten"""
 
 
@@ -56,14 +57,17 @@ def vraag_tot_geldig(vraag, controle):
 
 
 def vraag_wijziging(vraag, huidige_tekst, controle):
-    """Vraagt een nieuwe waarde voor een veld, of Enter om de huidige waarde te behouden.
+    """Vraagt een nieuwe waarde voor een veld.
 
+    Enter (leeg laten) behoudt de huidige waarde, een '-' maakt het veld leeg.
     Blijft vragen tot controle(antwoord) geen ValueError meer geeft.
     """
     while True:
         antwoord = input(f"{vraag} [{huidige_tekst or 'leeg'}]: ").strip()
         if not antwoord:
             antwoord = huidige_tekst
+        elif antwoord == "-":
+            antwoord = ""
         try:
             controle(antwoord)
             return antwoord
@@ -243,7 +247,7 @@ def menu_aanpassen():
         print("Er is geen vragenlijst met dit id.")
         return
 
-    print("Tip: druk op Enter om de huidige waarde [tussen haakjes] te behouden.")
+    print("Tip: Enter = huidige waarde [tussen haakjes] behouden, '-' maakt het veld leeg.")
     while True:
         print("\n" + vragenlijst.details())
         print(MENU_AANPASSEN)
@@ -295,6 +299,18 @@ def menu_aanpassen():
             print("Ongeldige keuze.")
 
 
+def menu_details():
+    """Alle gegevens van één vragenlijst bekijken, ook de kosten."""
+    print("\n--- Details van een vragenlijst ---")
+    toon_lijst(alle_vragenlijsten())
+    vragenlijst = zoek_op_id(vraag_getal("\nId van de vragenlijst: "))
+    if vragenlijst is None:
+        print("Er is geen vragenlijst met dit id.")
+        return
+    print()
+    print(vragenlijst.details())
+
+
 # Het hoofdprogramma
 
 def main():
@@ -319,6 +335,8 @@ def main():
             menu_nieuwe_vragenlijst()
         elif keuze == "7":
             menu_aanpassen()
+        elif keuze == "8":
+            menu_details()
         elif keuze == "0":
             print("Tot ziens!")
             break
