@@ -45,13 +45,23 @@ def alle_vragenlijsten():
     return zoek_vragenlijsten()
 
 
+def zoek_op_id(vragenlijst_id):
+    """Geeft de vragenlijst met een dit id terug, of None als die niet bestaat."""
+    resultaten = zoek_vragenlijsten(" WHERE v.id = ?", (vragenlijst_id,))
+    if resultaten:
+        return resultaten[0]
+    return None
+
+
 def zoek_op_afdeling(afdeling):
     """Geeft de vragenlijsten van een afdeling terug (deel van de naam volstaat)."""
     return zoek_vragenlijsten(" WHERE v.afdeling LIKE ?", (f"%{afdeling}%",))
 
+
 def zoek_op_contactpersoon(contactpersoon):
     """Geeft de vragenlijsten van een contactpersoon terug (deel van de naam volstaat)."""
     return zoek_vragenlijsten(" WHERE v.contactpersoon LIKE ?", (f"%{contactpersoon}%",))
+
 
 def zoek_op_leverancier(leverancier_id):
     """Geeft de vragenlijsten van een leverancier terug."""
@@ -75,6 +85,7 @@ def vervallend_binnen(aantal_dagen):
     # Sorteer op einddatum: wat het eerst vervalt, staat bovenaan
     vervallend.sort(key=lambda item: item.get_einddatum())
     return vervallend
+
 
 def voeg_vragenlijst_toe(nieuwe_vragenlijst):
     """Slaat een nieuwe vragenlijst op in de database en geeft het nieuwe id terug."""
@@ -103,7 +114,37 @@ def voeg_vragenlijst_toe(nieuwe_vragenlijst):
     return nieuw_id
 
 
+def wijzig_vragenlijst(gewijzigde_vragenlijst):
+    """Slaat de gegevens van de gewijzigde vragenlijst op in de database."""
+    with sqlite3.connect(config.DB_PATH) as db:
+        db.execute(
+            """
+            UPDATE vragenlijsten
+            SET naam = ?, leverancier_id = ?, afdeling = ?, contactpersoon = ?,
+            startdatum = ?, einddatum = ?, opstartkost = ?, jaarlijkse_kost = ?, status = ?
+            WHERE id = ?
+            """,
+            (
+                gewijzigde_vragenlijst.get_naam(),
+                gewijzigde_vragenlijst.get_leverancier_id(),
+                gewijzigde_vragenlijst.get_afdeling(),
+                gewijzigde_vragenlijst.get_contactpersoon(),
+                datum_voor_database(gewijzigde_vragenlijst.get_startdatum()),
+                datum_voor_database(gewijzigde_vragenlijst.get_einddatum()),
+                gewijzigde_vragenlijst.get_opstartkost(),
+                gewijzigde_vragenlijst.get_jaarlijkse_kost(),
+                gewijzigde_vragenlijst.get_status(),
+                gewijzigde_vragenlijst.get_id(),
+            ),
+        )
+    db.close()
+
+
 if __name__ == "__main__":
+    print("--- Details van vragenlijst 1 ---")
+    print(zoek_op_id(1).details())
+    print("Vragenlijst 99:", zoek_op_id(99))
+
     print("--- Alle vragenlijsten ---")
     for vragenlijst in alle_vragenlijsten():
         print(vragenlijst)

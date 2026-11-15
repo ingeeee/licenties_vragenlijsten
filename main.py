@@ -1,13 +1,14 @@
 """Startpunt van de applicatie: een menu in de terminal."""
 
 from models.leverancier import Leverancier
-from models.vragenlijst import Vragenlijst, controleer_datum, controleer_kost
+from models.vragenlijst import (Vragenlijst, controleer_datum, controleer_kost,
+                                datum_als_tekst, kost_als_tekst)
 from services.database import maak_tabellen
 from services.leveranciers import (alle_leveranciers, leverancier_bestaat,
                                    voeg_leverancier_toe)
 from services.vragenlijsten import (alle_vragenlijsten, vervallend_binnen, voeg_vragenlijst_toe,
-                                    zoek_op_afdeling, zoek_op_contactpersoon, zoek_op_leverancier,
-                                    zoek_op_status)
+                                    wijzig_vragenlijst, zoek_op_afdeling, zoek_op_contactpersoon,
+                                    zoek_op_id, zoek_op_leverancier, zoek_op_status)
 
 MENU = """
 === Licenties vragenlijsten ===
@@ -17,6 +18,7 @@ MENU = """
 4. Licenties die binnenkort vervallen
 5. Nieuwe leverancier toevoegen
 6. Nieuwe vragenlijst (of aanvraag) toevoegen
+7. Vragenlijst aanpassen
 0. Afsluiten"""
 
 
@@ -53,20 +55,34 @@ def vraag_tot_geldig(vraag, controle):
             print(fout)
 
 
-def kies_leverancier():
-    """Toont alle leveranciers en vraagt de gebruiker er een te kiezen.
+def vraag_wijziging(vraag, huidige_tekst, controle):
+    """Vraagt een nieuwe waarde voor een veld, of Enter om de huidige waarde te behouden.
 
-    Geeft het id van de gekozen leverancier terug.
+    Blijft vragen tot controle(antwoord) geen ValueError meer geeft.
+    """
+    while True:
+        antwoord = input(f"{vraag} [{huidige_tekst or 'leeg'}]: ").strip()
+        if not antwoord:
+            antwoord = huidige_tekst
+        try:
+            controle(antwoord)
+            return antwoord
+        except ValueError as fout:
+            print(fout)
+
+
+def kies_leverancier():
+    """Toont de leveranciers en laat de gebruiker er een kiezen.
+
+    Geeft het gekozen Leverancier-object terug.
     """
     leveranciers = alle_leveranciers()
     toon_lijst(leveranciers)
-    geldige_ids = []
-    for leverancier in leveranciers:
-        geldige_ids.append(leverancier.get_id())
     while True:
         leverancier_id = vraag_getal("Id van de leverancier: ")
-        if leverancier_id in geldige_ids:
-            return leverancier_id
+        for leverancier in leveranciers:
+            if leverancier.get_id() == leverancier_id:
+                return leverancier
         print("Er is geen leverancier met dit id.")
 
 
@@ -110,9 +126,9 @@ def menu_zoeken():
         toon_lijst(zoek_op_afdeling(afdeling))
 
     elif keuze == "b":
-        leverancier_id = kies_leverancier()
+        leverancier = kies_leverancier()
         print()
-        toon_lijst(zoek_op_leverancier(leverancier_id))
+        toon_lijst(zoek_op_leverancier(leverancier.get_id()))
 
     elif keuze == "c":
         contactpersoon = input("Contactpersoon (of een deel ervan): ")
@@ -176,11 +192,12 @@ def menu_nieuwe_vragenlijst():
         return
 
     print("\nLeverancier:")
-    leverancier_id = kies_leverancier()
+    leverancier = kies_leverancier()
 
     while True:
         try:
-            vragenlijst = Vragenlijst(naam, leverancier_id, input("Afdeling: "))
+            vragenlijst = Vragenlijst(naam, leverancier.get_id(), input("Afdeling: "),
+                                      leverancier_naam=leverancier.get_naam())
             break
         except ValueError as fout:
             print(fout)
@@ -202,6 +219,80 @@ def menu_nieuwe_vragenlijst():
 
     nieuw_id = voeg_vragenlijst_toe(vragenlijst)
     print(f"\nVragenlijst '{vragenlijst.get_naam()}' toegevoegd met id {nieuw_id}.")
+
+
+MENU_AANPASSEN = """
+Wat wil je aanpassen?
+  1. Naam
+  2. Leverancier
+  3. Afdeling
+  4. Contactpersoon
+  5. Status
+  6. Periode (start- en einddatum)
+  7. Kosten
+  0. Opslaan en terug naar het hoofdmenu
+  9. Annuleren (niets opslaan)"""
+
+
+def menu_aanpassen():
+    """Menu-optie 7: een bestaande vragenlijst aanpassen."""
+    print("\n--- Vragenlijst aanpassen ---")
+    toon_lijst(alle_vragenlijsten())
+    vragenlijst = zoek_op_id(vraag_getal("\nId van de vragenlijst: "))
+    if vragenlijst is None:
+        print("Er is geen vragenlijst met dit id.")
+        return
+
+    print("Tip: druk op Enter om de huidige waarde [tussen haakjes] te behouden.")
+    while True:
+        print("\n" + vragenlijst.details())
+        print(MENU_AANPASSEN)
+        keuze = input("Maak je keuze: ").strip()
+
+        if keuze == "1":
+            vraag_wijziging("Naam", vragenlijst.get_naam(), vragenlijst.set_naam)
+
+        elif keuze == "2":
+            leverancier = kies_leverancier()
+            vragenlijst.set_leverancier(leverancier.get_id(), leverancier.get_naam())
+
+        elif keuze == "3":
+            vraag_wijziging("Afdeling", vragenlijst.get_afdeling(), vragenlijst.set_afdeling)
+
+        elif keuze == "4":
+            vraag_wijziging("Contactpersoon", vragenlijst.get_contactpersoon() or "",
+                            vragenlijst.set_contactpersoon)
+
+        elif keuze == "5":
+            vragenlijst.set_status(kies_status())
+
+        elif keuze == "6":
+            startdatum = vraag_wijziging("Startdatum (DD-MM-JJJJ)",
+                                         datum_als_tekst(vragenlijst.get_startdatum(), ""),
+                                         controleer_datum)
+            vraag_wijziging("Einddatum (DD-MM-JJJJ)",
+                            datum_als_tekst(vragenlijst.get_einddatum(), ""),
+                            lambda einddatum: vragenlijst.set_periode(startdatum, einddatum))
+
+        elif keuze == "7":
+            opstartkost = vraag_wijziging("Opstartkost",
+                                          kost_als_tekst(vragenlijst.get_opstartkost(), ""),
+                                          controleer_kost)
+            vraag_wijziging("Jaarlijkse kost",
+                            kost_als_tekst(vragenlijst.get_jaarlijkse_kost(), ""),
+                            lambda kost: vragenlijst.set_kosten(opstartkost, kost))
+
+        elif keuze == "0":
+            wijzig_vragenlijst(vragenlijst)
+            print(f"De wijzigingen aan '{vragenlijst.get_naam()}' zijn opgeslagen.")
+            return
+
+        elif keuze == "9":
+            print("Aanpassen geannuleerd, er werd niets opgeslagen.")
+            return
+
+        else:
+            print("Ongeldige keuze.")
 
 
 # Het hoofdprogramma
@@ -226,6 +317,8 @@ def main():
             menu_nieuwe_leverancier()
         elif keuze == "6":
             menu_nieuwe_vragenlijst()
+        elif keuze == "7":
+            menu_aanpassen()
         elif keuze == "0":
             print("Tot ziens!")
             break
