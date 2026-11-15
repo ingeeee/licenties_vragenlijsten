@@ -179,6 +179,25 @@ def draag_contactpersoon_over(oude_contactpersoon, nieuwe_contactpersoon):
     return aantal
 
 
+def kosten_per_afdeling():
+    """Geeft per afdeling het aantal actieve licenties en hun totale jaarlijkse kost terug.
+
+    Resultaat: een lijst van tuples (afdeling, aantal, totale_jaarlijkse_kost).
+    """
+    with sqlite3.connect(config.DB_PATH) as db:
+        rijen = db.execute(
+            """
+            SELECT afdeling, COUNT(*), SUM(jaarlijkse_kost)
+            FROM vragenlijsten
+            WHERE status = 'actief'
+            GROUP BY afdeling
+            ORDER BY afdeling
+            """
+        ).fetchall()
+    db.close()
+    return rijen
+
+
 if __name__ == "__main__":
     print("--- Details van vragenlijst 1 ---")
     print(zoek_op_id(1).details())
