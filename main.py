@@ -6,6 +6,7 @@ from models.vragenlijst import (Vragenlijst, controleer_datum, controleer_kost,
 from services.database import maak_tabellen
 from services.leveranciers import (alle_leveranciers, leverancier_bestaat,
                                    voeg_leverancier_toe)
+from services.rapporten import rapport_alle_vragenlijsten, rapport_kosten_per_afdeling
 from services.vragenlijsten import (alle_contactpersonen, alle_vragenlijsten,
                                     draag_contactpersoon_over, vervallend_binnen,
                                     voeg_vragenlijst_toe, vragenlijsten_van_contactpersoon,
@@ -24,6 +25,7 @@ MENU = """
 7. Vragenlijst aanpassen
 8. Details van een vragenlijst bekijken
 9. Contactpersoon overdragen (vb. bij vertrek)
+10. Rapport maken (csv-bestand)
 0. Afsluiten"""
 
 
@@ -362,39 +364,56 @@ def menu_overdragen():
     print(f"{aantal} vragenlijst(en) overgedragen van {oude} aan {nieuwe}.")
 
 
+def menu_rapport():
+    """Menu-optie 10: een rapport als csv-bestand maken."""
+    print("\nWelk rapport wil je maken?")
+    print("  1. Alle vragenlijsten (met leverancier, datums, kosten en dagen tot einddatum)")
+    print("  2. Kosten per afdeling (actieve licenties)")
+    keuze = input("Maak je keuze: ").strip()
+
+    if keuze == "1":
+        pad = rapport_alle_vragenlijsten()
+    elif keuze == "2":
+        pad = rapport_kosten_per_afdeling()
+    else:
+        print("Ongeldige keuze.")
+        return
+    print(f"Rapport opgeslagen in: {pad}")
+
+
 # Het hoofdprogramma
+
+# welke functie hoort bij welke keuze in het hoofdmenu
+MENU_ACTIES = {
+    "1": menu_leveranciers,
+    "2": menu_vragenlijsten,
+    "3": menu_zoeken,
+    "4": menu_vervallend,
+    "5": menu_nieuwe_leverancier,
+    "6": menu_nieuwe_vragenlijst,
+    "7": menu_aanpassen,
+    "8": menu_details,
+    "9": menu_overdragen,
+    "10": menu_rapport,
+}
 
 def main():
     """Toont het menu en voert de gekozen optie uit, tot de gebruiker afsluit."""
-    maak_tabellen()
+    maak_tabellen() 
 
     while True:
         print(MENU)
         keuze = input("Maak je keuze: ").strip()
 
-        if keuze == "1":
-            menu_leveranciers()
-        elif keuze == "2":
-            menu_vragenlijsten()
-        elif keuze == "3":
-            menu_zoeken()
-        elif keuze == "4":
-            menu_vervallend()
-        elif keuze == "5":
-            menu_nieuwe_leverancier()
-        elif keuze == "6":
-            menu_nieuwe_vragenlijst()
-        elif keuze == "7":
-            menu_aanpassen()
-        elif keuze == "8":
-            menu_details()
-        elif keuze == "9":
-            menu_overdragen()
-        elif keuze == "0":
+        if keuze == "0":
             print("Tot ziens!")
             break
-        else:
+
+        actie = MENU_ACTIES.get(keuze)
+        if actie is None:
             print("Ongeldige keuze, probeer opnieuw.")
+        else:
+            actie()
 
 
 if __name__ == "__main__":
