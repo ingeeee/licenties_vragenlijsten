@@ -22,6 +22,7 @@ def alle_leveranciers():
         leveranciers.append(Leverancier(naam, email, leverancier_id))
     return leveranciers
 
+
 def leverancier_bestaat(naam):
     """Geeft True als er al een leverancier met deze naam bestaat (hoofdletters tellen niet)."""
     with sqlite3.connect(config.DB_PATH) as db:
@@ -31,6 +32,7 @@ def leverancier_bestaat(naam):
         ).fetchone()
     db.close()
     return rij is not None
+
 
 def voeg_leverancier_toe(nieuwe_leverancier):
     """Slaat een nieuwe leverancier op in de database en geeft het nieuwe id terug.

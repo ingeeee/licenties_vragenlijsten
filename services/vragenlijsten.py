@@ -47,7 +47,7 @@ def alle_vragenlijsten():
 
 
 def zoek_op_id(vragenlijst_id):
-    """Geeft de vragenlijst met een dit id terug, of None als die niet bestaat."""
+    """Geeft de vragenlijst met dit id terug, of None als die niet bestaat."""
     resultaten = zoek_vragenlijsten(" WHERE v.id = ?", (vragenlijst_id,))
     if resultaten:
         return resultaten[0]
@@ -204,7 +204,7 @@ if __name__ == "__main__":
     print(zoek_op_id(1).details())
     print("Vragenlijst 99:", zoek_op_id(99))
 
-    print("--- Alle vragenlijsten ---")
+    print("\n--- Alle vragenlijsten ---")
     for vragenlijst in alle_vragenlijsten():
         print(vragenlijst)
 
@@ -212,8 +212,8 @@ if __name__ == "__main__":
     for vragenlijst in zoek_op_afdeling("ortho"):
         print(vragenlijst)
 
-    print("\n--- Contactpersoon 'Jansen' ---")
-    for vragenlijst in zoek_op_contactpersoon("Jansen"):
+    print("\n--- Contactpersoon 'Peeters' ---")
+    for vragenlijst in zoek_op_contactpersoon("Peeters"):
         print(vragenlijst)
 
     print("\n--- Leverancier 2 ---")
